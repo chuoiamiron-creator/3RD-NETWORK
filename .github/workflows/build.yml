@@ -41,8 +41,12 @@ jobs:
     - name: Set NDK Home
       run: echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/23.1.7779620" >> $GITHUB_ENV
 
-    - name: Install Global Gradle
-      run: sudo apt-get update && sudo apt-get install -y gradle
+    - name: Install Modern Gradle 7.5.1
+      run: |
+        wget https://services.gradle.org/distributions/gradle-7.5.1-bin.zip
+        unzip -q gradle-7.5.1-bin.zip
+        sudo mv gradle-7.5.1 /opt/gradle
+        echo "/opt/gradle/bin" >> $GITHUB_PATH
 
     - name: Build APK with Gradle
       run: gradle assembleDebug --stacktrace
