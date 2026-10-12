@@ -2,7 +2,7 @@ name: Build Mod Menu APK
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "master" ]
   workflow_dispatch:
 
 jobs:
@@ -21,32 +21,26 @@ jobs:
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
       with:
-        packages: 'platform-tools platforms;android-33 build-tools;33.0.0'
+        packages: 'platforms;android-33 build-tools;34.0.0'
       env:
         SKIP_JDK_VERSION_CHECK: true
 
-    - name: Accept SDK licenses and Install NDK/CMake
+    - name: Install NDK
       run: |
         yes | sdkmanager --licenses || true
-        sdkmanager --install "ndk;23.1.7779620" "cmake;3.22.1"
+        sdkmanager --install "ndk;23.1.7779620"
 
     - name: Set NDK Home
       run: echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/23.1.7779620" >> $GITHUB_ENV
 
-    - name: Auto Generate Gradle Wrapper and Build
-      run: |
-        sudo apt-get update && sudo apt-get install -y gradle
-        PROJECT_DIR=$(dirname "$(find . -name "settings.gradle" -o -name "build.gradle" -print -quit)")
-        cd "$PROJECT_DIR"
-        if [ ! -f "gradlew" ]; then
-          echo "Generating missing gradlew..."
-          gradle wrapper
-        fi
-        chmod +x gradlew
-        ./gradlew assembleDebug --stacktrace
+    - name: Grant execute permission for gradlew
+      run: chmod +x gradlew || true
 
-    - name: Upload APK Artifact
+    - name: Build APK with Gradle
+      run: ./gradlew assembleDebug --stacktrace
+
+    - name: Upload Built APK
       uses: actions/upload-artifact@v4
       with:
         name: app-debug
-        path: '**/app/build/outputs/apk/debug/'
+        path: '**/build/outputs/apk/debug/*.apk'
