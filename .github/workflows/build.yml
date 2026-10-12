@@ -10,28 +10,28 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
-    - name: Unzip Source Code
+    - name: Unzip and Setup Source
       run: |
         unzip -q R3DNETWORK-main.zip -d extracted_source
-        TARGET_DIR=$(find extracted_source -name "build.gradle" | head -n 1 | xargs dirname)
-        if [ -n "$TARGET_DIR" ]; then
-          cp -r "$TARGET_DIR"/* .
+        DIR=$(find extracted_source -name "gradlew" -exec dirname {} \;)
+        if [ -n "$DIR" ]; then
+          cp -r "$DIR"/* .
+          chmod +x gradlew
+        else
+          echo "gradlew not found!"
+          exit 1
         fi
 
     - name: Set up JDK 17
-      uses: actions/setup-java@v3
+      uses: actions/setup-java@v5
       with:
         distribution: 'temurin'
         java-version: '17'
 
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
-      with:
-        packages: 'platforms;android-33 build-tools;34.0.0'
-      env:
-        SKIP_JDK_VERSION_CHECK: true
 
     - name: Install NDK
       run: |
@@ -41,15 +41,8 @@ jobs:
     - name: Set NDK Home
       run: echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/23.1.7779620" >> $GITHUB_ENV
 
-    - name: Install Modern Gradle 7.5.1
-      run: |
-        wget https://services.gradle.org/distributions/gradle-7.5.1-bin.zip
-        unzip -q gradle-7.5.1-bin.zip
-        sudo mv gradle-7.5.1 /opt/gradle
-        echo "/opt/gradle/bin" >> $GITHUB_PATH
-
-    - name: Build APK with Gradle
-      run: gradle assembleDebug --stacktrace
+    - name: Build APK with Gradle Wrapper
+      run: ./gradlew assembleDebug --stacktrace
 
     - name: Upload Built APK
       uses: actions/upload-artifact@v4
