@@ -3,7 +3,6 @@ name: Build Android NDK Project
 on:
   push:
     branches: [ main, master ]
-  workflow_dispatch:
 
 jobs:
   build:
@@ -20,28 +19,16 @@ jobs:
         java-version: '17'
 
     - name: Setup Android SDK
-      uses: android-actions/setup-android@v3
-      with:
-        packages: 'platforms;android-33 build-tools;34.0.0'
-      env:
-        SKIP_JDK_VERSION_CHECK: true
-
-    - name: Install NDK
-      run: |
-        yes | sdkmanager --licenses || true
-        sdkmanager --install "ndk;23.1.7779620"
-
-    - name: Set NDK Home
-      run: echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/23.1.7779620" >> $GITHUB_ENV
+      uses: android-actions/setup-android@v2
 
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
 
     - name: Build APK with Gradle
-      run: ./gradlew assembleDebug --stacktrace
+      run: ./gradlew assembleRelease
 
     - name: Upload Built APK
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v3
       with:
-        name: app-debug
-        path: '**/build/outputs/apk/debug/*.apk'
+        name: app-release-apk
+        path: app/build/outputs/apk/release/*.apk
