@@ -12,14 +12,17 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    - name: Unzip Source Code Automatically
+    - name: Unzip and Move Source Files
       run: |
-        if ls *.zip 1> /dev/null 2>&1; then
-          ZIP_FILE=$(ls *.zip | head -n 1)
-          echo "Found zip file: $ZIP_FILE"
-          unzip -q "$ZIP_FILE" -d extracted_source
-          shopt -s dotglob
-          cp -r extracted_source/*/* . 2>/dev/null || cp -r extracted_source/* .
+        unzip -q R3DNETWORK-main.zip -d extracted_source
+        TARGET_DIR=$(find extracted_source -name "gradlew" -exec dirname {} \;)
+        if [ -n "$TARGET_DIR" ]; then
+          echo "Found project directory at: $TARGET_DIR"
+          cp -r "$TARGET_DIR"/* .
+          chmod +x gradlew
+        else
+          echo "Error: gradlew not found in zip!"
+          exit 1
         fi
 
     - name: Set up JDK 17
@@ -42,9 +45,6 @@ jobs:
 
     - name: Set NDK Home
       run: echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/23.1.7779620" >> $GITHUB_ENV
-
-    - name: Grant execute permission for gradlew
-      run: chmod +x gradlew || true
 
     - name: Build APK with Gradle
       run: ./gradlew assembleDebug --stacktrace
