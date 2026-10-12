@@ -12,16 +12,12 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: Unzip Source Code Safely
+    - name: Unzip Source Code
       run: |
         unzip -q R3DNETWORK-main.zip -d extracted_source
-        TARGET_DIR=$(find extracted_source -name "build.gradle" -exec dirname {} \; | head -n 1)
-        if [ -n "$TARGET_DIR" ]; then
-          echo "Found project at: $TARGET_DIR"
-          cp -r "$TARGET_DIR"/. .
-        else
-          echo "Error: build.gradle not found!"
-          exit 1
+        DIR=$(find extracted_source -name "build.gradle" -exec dirname {} \;)
+        if [ -n "$DIR" ]; then
+          cp -r "$DIR"/* .
         fi
 
     - name: Set up JDK 17
@@ -46,11 +42,11 @@ jobs:
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v3
       with:
-        gradle-version: '7.5.1'
+        gradle-version: '8.11.1'
 
     - name: Generate Fresh Gradle Wrapper
       run: |
-        gradle wrapper --gradle-version 7.5.1
+        gradle wrapper --gradle-version 8.11.1
         chmod +x gradlew
 
     - name: Build APK with Gradle Wrapper
