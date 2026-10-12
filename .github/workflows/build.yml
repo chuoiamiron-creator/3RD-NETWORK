@@ -12,12 +12,16 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: Unzip Source Code
+    - name: Unzip Source Code Safely
       run: |
         unzip -q R3DNETWORK-main.zip -d extracted_source
-        DIR=$(find extracted_source -name "build.gradle" -exec dirname {} \;)
-        if [ -n "$DIR" ]; then
-          cp -r "$DIR"/* .
+        TARGET_DIR=$(find extracted_source -name "build.gradle" -exec dirname {} \; | head -n 1)
+        if [ -n "$TARGET_DIR" ]; then
+          echo "Found project at: $TARGET_DIR"
+          cp -r "$TARGET_DIR"/. .
+        else
+          echo "Error: build.gradle not found!"
+          exit 1
         fi
 
     - name: Set up JDK 17
